@@ -19,14 +19,14 @@ angular.module('todo', [
   .factory('Projects', function() {
     return {
       all: function() {
-        var projectString = window.localStorage['projects'];
+        var projectString = window.localStorage.projects;
         if(projectString) {
           return angular.fromJson(projectString);
         }
         return [];
       },
       save: function(projects) {
-        window.localStorage['projects'] = angular.toJson(projects);
+        window.localStorage.projects = angular.toJson(projects);
       },
       newProject: function(projectTitle) {
         // Add a new project
@@ -36,12 +36,12 @@ angular.module('todo', [
         };
       },
       getLastActiveIndex: function() {
-        return parseInt(window.localStorage['lastActiveProject']) || 0;
+        return parseInt(window.localStorage.lastActiveProject) || 0;
       },
       setLastActiveIndex: function(index) {
-        window.localStorage['lastActiveProject'] = index;
+        window.localStorage.lastActiveProject = index;
       }
-    }
+    };
   })
 .controller('TodoCtrl', function($scope, $timeout, Modal, Projects) {
 
@@ -52,7 +52,7 @@ angular.module('todo', [
     $scope.projects.push(newProject);
     Projects.save($scope.projects);
     $scope.selectProject(newProject, $scope.projects.length-1);
-  }
+  };
 
 
   // Load or initialize projects
@@ -95,7 +95,7 @@ angular.module('todo', [
     // Inefficient, but save all the projects
     Projects.save($scope.projects);
 
-    task.title = "";
+    task.title = '';
   };
 
   $scope.newTask = function() {
@@ -104,7 +104,7 @@ angular.module('todo', [
 
   $scope.closeNewTask = function() {
     $scope.taskModal.hide();
-  }
+  };
 
   $scope.toggleProjects = function() {
     $scope.sideMenuController.toggleLeft();
@@ -115,7 +115,7 @@ angular.module('todo', [
   // this by using $timeout so everything is initialized
   // properly
   $timeout(function() {
-    if($scope.projects.length == 0) {
+    if($scope.projects.length === 0) {
       while(true) {
         var projectTitle = prompt('Your first project title:');
         if(projectTitle) {
