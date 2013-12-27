@@ -31,47 +31,49 @@ angular.module('todo')
   $scope.selectProject = function(project, index) {
     $scope.activeProject = project;
     Projects.setLastActiveIndex(index);
-    $scope.sideMenuController.close();
+    //$scope.sideMenuController.close();
   };
 
   // Create our modal
-  Modal.fromTemplateUrl('views/newtask.html', function(modal) {
-    $scope.taskModal = modal;
+  Modal.fromTemplateUrl('views/newpost.html', function(modal) {
+    $scope.postModal = modal;
   }, {
     scope: $scope
   });
 
-  $scope.createTask = function(task) {
+  $scope.createPost = function(post) {
     if(!$scope.activeProject) {
       return;
     }
-    $scope.activeProject.tasks.push({
-      title: task.title
+    $scope.activeProject.posts.push({
+      title: post.title,
+      comments: []
     });
-    $scope.taskModal.hide();
+    $scope.postModal.hide();
 
     // Inefficient, but save all the projects
     Projects.save($scope.projects);
 
-    task.title = '';
+    post.title = '';
   };
 
-  $scope.newTask = function() {
-    $scope.taskModal.show();
+  $scope.newPost = function() {
+    $scope.postModal.show();
   };
 
-  $scope.closeNewTask = function() {
-    $scope.taskModal.hide();
+  $scope.closeNewPost = function() {
+    $scope.postModal.hide();
   };
 
+  /*
   $scope.toggleProjects = function() {
     $scope.sideMenuController.toggleLeft();
   };
+  */
 
-
-  $scope.selectTask = function(task, index) {
-    $scope.activeTask = task;
-    console.log('selectTask: '+task.title);
+  $scope.selectPost = function(post, index) {
+    $scope.activePost = post;
+    console.log('selectPost: '+post.title);
   };
 
   $scope.leftButtons = [
@@ -82,6 +84,17 @@ angular.module('todo')
         }
       }
   ];
+
+  $scope.rightButtons = [
+      { 
+        type: 'button-clear',
+        content: '<i class="icon ion-plus-round"></i>',
+        tap: function(e) {
+          $scope.newPost();
+        }
+      }
+  ] 
+
 
   // Try to create the first project, make sure to defer
   // this by using $timeout so everything is initialized

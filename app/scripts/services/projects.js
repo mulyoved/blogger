@@ -17,7 +17,7 @@ angular.module('todo')
         // Add a new project
         return {
           title: projectTitle,
-          tasks: []
+          posts: []
         };
       },
       getLastActiveIndex: function() {
