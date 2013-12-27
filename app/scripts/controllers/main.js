@@ -74,6 +74,15 @@ angular.module('todo')
     console.log('selectTask: '+task.title);
   };
 
+  $scope.leftButtons = [
+      { 
+        type: 'button-clear',
+        content: '<i class="icon ion-gear-b"></i>',
+        tap: function(e) {
+        }
+      }
+  ];
+
   // Try to create the first project, make sure to defer
   // this by using $timeout so everything is initialized
   // properly

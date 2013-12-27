@@ -7,14 +7,6 @@ angular.module('todo')
 	}
 
 
-	$scope.leftButtons = [
-	    { 
-	      type: 'button-clear',
-	      content: '<i class="icon ion-arrow-left-c"></i>',
-	      tap: function(e) {
-	      }
-	    }
-	];
 	$scope.rightButtons = [
 	    { 
 	      type: 'button-clear',
