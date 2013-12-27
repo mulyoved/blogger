@@ -71,7 +71,7 @@ angular.module('todo')
 
   $scope.selectTask = function(task, index) {
     $scope.activeTask = task;
-    console.log("selectTask: "+task.title)
+    console.log('selectTask: '+task.title);
   };
 
   // Try to create the first project, make sure to defer
