@@ -1,11 +1,8 @@
 'use strict';
 
 angular.module('todo')
-.controller('PostCtrl', function ($scope, Modal) {
-	$scope.post = {
-		text: 'Post Text4'
-	}
-
+.controller('PostCtrl', function ($scope, $routeParams, Modal, Projects) {
+  $scope.post = Projects.all()[Projects.getLastActiveIndex()].posts[$routeParams.postId];
 
   // Create our modal
   Modal.fromTemplateUrl('views/newcomment.html', function(modal) {
@@ -15,10 +12,10 @@ angular.module('todo')
   });
 
   $scope.createComment = function(comment) {
-    if(!$scope.activeProject) {
+    if(!$scope.post) {
       return;
     }
-    $scope.activePost.comments.push({
+    $scope.post.comments.push({
       title: comment.title
     });
     $scope.commentModal.hide();

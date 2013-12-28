@@ -46,13 +46,14 @@ angular.module('todo')
       return;
     }
     $scope.activeProject.posts.push({
+      id: $scope.activeProject.posts.length,
       title: post.title,
       comments: []
     });
     $scope.postModal.hide();
 
     // Inefficient, but save all the projects
-    Projects.save($scope.projects);
+    Projects.save(Projects.all());
 
     post.title = '';
   };
