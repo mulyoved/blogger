@@ -6,18 +6,20 @@
 	</header>
 
 	<!-- Modal content area -->
-	<content has-header="true">
+	<content has-header="true" >
 
 	  <form ng-submit="createPost(post)">
 	    <div class="list">
 	      <label class="item item-input">
-	        <input type="text" placeholder="What do you need to do?" ng-model="post.title">
+	        <input type="text" placeholder="Post title" ng-model="post.title"/>
+	      </label>
+	      <label class="item item-input">
+	      	<textarea type="text" placeholder="Post content V2" ng-model="post.content"></textarea>
 	      </label>
 	    </div>
 	    <div class="padding">
 	      <button type="submit" class="button button-block button-positive">Save Post</button>
 	    </div>
 	  </form>
-
 	</content>
 </div>

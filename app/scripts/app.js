@@ -29,6 +29,10 @@ angular.module('todo', [
     controller: 'PostCtrl'
   });
 
+  $routeProvider.when('/test', {
+    templateUrl: 'views/test.html',
+  });
+
   // if none of the above routes are met, use this fallback
   // which executes the 'AppCtrl' controller (controllers.js)
   $routeProvider.otherwise({

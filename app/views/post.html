@@ -1,5 +1,9 @@
 <nav-page ng-controller="PostCtrl" title="post.title" right-buttons="rightButtons">
-  <content has-header="true" padding="true">
-    {{ post.title }}
+  <content has-header="true" padding="false">
+      <list>
+        <item ng-repeat="comment in post.comments" href="#/comment/{{comment.id}}">
+          {{comment.title}}
+        </item>
+      </list>
   </content>
 </nav-page>

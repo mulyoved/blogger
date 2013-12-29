@@ -1,0 +1,20 @@
+#vbox {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    position: absolute;
+    top:0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+#hbox {
+    display: -webkit-box;
+    -webkit-box-orient: horizontal;
+    -webkit-box-flex: 1
+}
+
+#article {
+    -webkit-box-flex: 1;
+    background: green;
+}

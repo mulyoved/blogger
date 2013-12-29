@@ -2,7 +2,10 @@
 
 angular.module('todo')
 .controller('PostCtrl', function ($scope, $routeParams, Modal, Projects) {
-  $scope.post = Projects.all()[Projects.getLastActiveIndex()].posts[$routeParams.postId];
+  // Load or initialize projects
+  $scope.projects = Projects.all();
+
+  $scope.post = $scope.projects[Projects.getLastActiveIndex()].posts[$routeParams.postId];
 
   // Create our modal
   Modal.fromTemplateUrl('views/newcomment.html', function(modal) {
@@ -16,6 +19,7 @@ angular.module('todo')
       return;
     }
     $scope.post.comments.push({
+      id: $scope.post.comments.length,
       title: comment.title
     });
     $scope.commentModal.hide();

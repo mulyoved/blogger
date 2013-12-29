@@ -53,7 +53,7 @@ angular.module('todo')
     $scope.postModal.hide();
 
     // Inefficient, but save all the projects
-    Projects.save(Projects.all());
+    Projects.save($scope.projects);
 
     post.title = '';
   };
