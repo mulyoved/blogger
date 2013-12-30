@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('todo')
-.controller('MainCtrl', function($scope, $timeout, Modal, Projects) {
+.controller('MainCtrl', function($scope, $timeout, $location, $window, Modal, Projects) {
 
   // A utility function for creating a new project
   // with the given projectTitle
@@ -34,48 +34,14 @@ angular.module('todo')
     //$scope.sideMenuController.close();
   };
 
-  // Create our modal
-  Modal.fromTemplateUrl('views/newpost.html', function(modal) {
-    $scope.postModal = modal;
-  }, {
-    scope: $scope
-  });
-
-  $scope.createPost = function(post) {
-    if(!$scope.activeProject) {
-      return;
-    }
-    $scope.activeProject.posts.push({
-      id: $scope.activeProject.posts.length,
-      title: post.title,
-      comments: []
-    });
-    $scope.postModal.hide();
-
-    // Inefficient, but save all the projects
-    Projects.save($scope.projects);
-
-    post.title = '';
-  };
-
-  $scope.newPost = function() {
-    $scope.postModal.show();
-  };
-
-  $scope.closeNewPost = function() {
-    $scope.postModal.hide();
-  };
-
-  /*
-  $scope.toggleProjects = function() {
-    $scope.sideMenuController.toggleLeft();
-  };
-  */
-
-  $scope.selectPost = function(post, index) {
-    $scope.activePost = post;
-    console.log('selectPost: '+post.title);
-  };
+  $scope.itemClick = function(post)
+  {
+      console.log("itemClick");
+      if (!$scope.isDeletingItems)
+      {
+        $location.path('/post/'+ post.id);
+      }
+  }
 
   $scope.leftButtons = [
       { 
@@ -86,16 +52,74 @@ angular.module('todo')
       }
   ];
 
-  $scope.rightButtons = [
+  var rightButtonsOnNew = [
       { 
         type: 'button-clear',
         content: '<i class="icon ion-plus-round"></i>',
         tap: function(e) {
-          $scope.newPost();
+          $location.path( '/newpost' );
+        }
+      },
+      { 
+        type: 'button-clear',
+        content: '<i class="icon ion-android-camera"></i>',
+        tap: function(e) {
+          $location.path( '/newpost' );
         }
       }
   ] 
 
+  var rightButtonsOnDelete = [
+    {
+      type: 'button-clear',
+      content: '<i class="icon ion-close-round"></i>',
+      tap: function(e) {
+          $scope.isDeletingItems = false;
+        $scope.rightButtons = rightButtonsOnNew;
+      }
+    }
+  ];
+
+  $scope.rightButtons = rightButtonsOnNew;
+
+  $scope.isDeletingItems = false;
+    $scope.toggleDelete = function() {
+      $scope.isDeletingItems = true;
+      $scope.rightButtons = rightButtonsOnDelete;
+    };
+
+  $scope.onListHold = function(e) {
+      console.log("onListHold");
+    $scope.toggleDelete();
+  }
+
+  $scope.deleteItem = function(post) {
+    if ($window.confirm('Are you sure you want to delete post?')) {
+      $scope.$eval($scope.deletePost(post));
+    }
+  };
+
+  function indexOf(array, obj) {
+    if (array.indexOf) return array.indexOf(obj);
+
+    for ( var i = 0; i < array.length; i++) {
+      if (obj === array[i]) return i;
+    }
+    return -1;
+  }
+
+  function arrayRemove(array, value) {
+    var index = indexOf(array, value);
+    if (index >=0)
+      array.splice(index, 1);
+    return value;
+  }
+
+  $scope.deletePost = function(post) {
+    console.log("deletePost: "+ post.title);
+    arrayRemove($scope.activeProject.posts, post);
+    Projects.save($scope.projects);
+  }
 
   // Try to create the first project, make sure to defer
   // this by using $timeout so everything is initialized

@@ -1,23 +1,11 @@
-<div class="modal">
-	<!-- Modal header bar -->
-	<header class="bar bar-header bar-secondary">
-	  <h1 class="title">New Comment</h1>
-	  <button class="button button-clear button-positive" ng-click="closeNewComment()">Cancel</button>
-	</header>
-
-	<!-- Modal content area -->
-	<content has-header="true">
-
+<nav-page title="post.title" right-buttons="rightButtons">
+  <content has-header="true" padding="false">
 	  <form ng-submit="createComment(comment)">
 	    <div class="list">
 	      <label class="item item-input">
-	        <input type="text" placeholder="Comment" ng-model="comment.title">
+	        <textarea type="text" placeholder="Comment" ng-model="comment.title"></textarea>
 	      </label>
 	    </div>
-	    <div class="padding">
-	      <button type="submit" class="button button-block button-positive">Save Comment</button>
-	    </div>
 	  </form>
-
-	</content>
-</div>
+  </content>
+</nav-page>

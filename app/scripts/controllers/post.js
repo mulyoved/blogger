@@ -1,51 +1,70 @@
 'use strict';
 
 angular.module('todo')
-.controller('PostCtrl', function ($scope, $routeParams, Modal, Projects) {
-  // Load or initialize projects
-  $scope.projects = Projects.all();
+.controller('PostCtrl', function ($scope, $routeParams, $location, $window, Modal, Projects) {
+	// Load or initialize projects
+	$scope.projects = Projects.all();
+	$scope.post = $scope.projects[Projects.getLastActiveIndex()].posts[$routeParams.postId];
 
-  $scope.post = $scope.projects[Projects.getLastActiveIndex()].posts[$routeParams.postId];
+	var rightButtonsOnNew = [
+		{
+			type: 'button-clear',
+			content: '<i class="icon ion-plus-round"></i>',
+			tap: function(e) {
+				$location.path( '/newcomment/' + $scope.post.id );
+			}
+		}
+	];
+	var rightButtonsOnDelete = [
+		{
+			type: 'button-clear',
+			content: '<i class="icon ion-close-round"></i>',
+			tap: function(e) {
+			    $scope.isDeletingItems = false;
+				$scope.rightButtons = rightButtonsOnNew;
+			}
+		}
+	];
 
-  // Create our modal
-  Modal.fromTemplateUrl('views/newcomment.html', function(modal) {
-    $scope.commentModal = modal;
-  }, {
-    scope: $scope
-  });
+	$scope.rightButtons = rightButtonsOnNew;
 
-  $scope.createComment = function(comment) {
-    if(!$scope.post) {
-      return;
-    }
-    $scope.post.comments.push({
-      id: $scope.post.comments.length,
-      title: comment.title
-    });
-    $scope.commentModal.hide();
+	$scope.isDeletingItems = false;
+    $scope.toggleDelete = function() {
+	    $scope.isDeletingItems = true; //!$scope.isDeletingItems;
+		$scope.rightButtons = rightButtonsOnDelete;
+    };
 
-    // Inefficient, but save all the projects
-    Projects.save($scope.projects);
+	$scope.onListHold = function(e)	{
+		$scope.toggleDelete();
+	}
 
-    comment.title = '';
-  };
+	$scope.deleteItem = function(comment) {
+		if ($window.confirm('Are you sure you want to delete comment?')) {
+			$scope.$eval($scope.deleteComment(comment));
+		}
+	};
 
-  $scope.newComment = function() {
-    $scope.commentModal.show();
-  };
+	function indexOf(array, obj) {
+	  if (array.indexOf) return array.indexOf(obj);
 
-  $scope.closeNewComment = function() {
-    $scope.commentModal.hide();
-  };
+	  for ( var i = 0; i < array.length; i++) {
+	    if (obj === array[i]) return i;
+	  }
+	  return -1;
+	}
 
+	function arrayRemove(array, value) {
+	  var index = indexOf(array, value);
+	  if (index >=0)
+	    array.splice(index, 1);
+	  return value;
+	}
 
-	$scope.rightButtons = [
-	    { 
-	      type: 'button-clear',
-	      content: '<i class="icon ion-plus-round"></i>',
-	      tap: function(e) {
-	          $scope.newComment();
-	      }
-	    }
-	]	
+	$scope.deleteComment = function(comment) {
+		console.log("deleteComment: "+ comment.title);
+		//$scope.persons.splice(idx, 1);
+		arrayRemove($scope.post.comments, comment);
+		Projects.save($scope.projects);
+	}
+
 });

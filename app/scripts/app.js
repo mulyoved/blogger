@@ -5,6 +5,8 @@ angular.module('todo', [
 //  'ngSanitize',
   'ngAnimate',
   'ngRoute',
+  'checklist-model',
+  'final',
   'ionic'
 ])
 
@@ -29,8 +31,23 @@ angular.module('todo', [
     controller: 'PostCtrl'
   });
 
+  $routeProvider.when('/newpost', {
+    templateUrl: 'views/newpost.html',
+    controller: 'NewpostCtrl'
+  });
+
+  $routeProvider.when('/newcomment/:postId', {
+    templateUrl: 'views/newcomment.html',
+    controller: 'NewcommentCtrl'
+  });
+
   $routeProvider.when('/test', {
     templateUrl: 'views/test.html',
+  });
+
+  $routeProvider.when('/test2', {
+    templateUrl: 'views/test2.html',
+    controller: 'Test2Ctrl'
   });
 
   // if none of the above routes are met, use this fallback

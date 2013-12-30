@@ -1,9 +1,11 @@
 <nav-page ng-controller="PostCtrl" title="post.title" right-buttons="rightButtons">
   <content has-header="true" padding="false">
-      <list>
-        <item ng-repeat="comment in post.comments" href="#/comment/{{comment.id}}">
-          {{comment.title}}
-        </item>
-      </list>
+
+	<list onhold="onListHold" can-delete="true" on-delete="deleteItem(item)" delete-icon="ion-trash-a" show-delete="isDeletingItems">
+		<!-- class="holdSelect"  -->
+		<item ng-repeat="comment in post.comments" item="comment">
+			{{comment.title}}
+		</item>
+	</list>
   </content>
 </nav-page>

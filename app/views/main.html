@@ -1,7 +1,7 @@
 <nav-page id="app-page" ng-controller="MainCtrl" title="activeProject.title" left-buttons="leftButtons" right-buttons="rightButtons">
     <content has-header="true" scroll="false">
-      <list>
-        <item ng-repeat="post in activeProject.posts" href="#/post/{{post.id}}">
+      <list onhold="onListHold" can-delete="true" on-delete="deleteItem(item)" delete-icon="ion-trash-a" show-delete="isDeletingItems">
+        <item ng-repeat="post in activeProject.posts" ng-click="itemClick(post)"  item="post">
           {{post.title}}
         </item>
       </list>
@@ -9,6 +9,7 @@
 </nav-page>
 
 <!--
+href="#/post/{{post.id}}"
   <header class="bar bar-header bar-dark">
     <button class="button button-icon">
       <i class="icon ion-arrow-left-c"  href="#/home"></i>
