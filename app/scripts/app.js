@@ -6,6 +6,7 @@ angular.module('todo', [
   'ngAnimate',
   'ngRoute',
   'checklist-model',
+  'directive.g+signin',
   'final',
   'ionic'
 ])

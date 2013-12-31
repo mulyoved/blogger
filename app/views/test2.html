@@ -1,101 +1,11 @@
 <nav-page title="Test2">
-      <header class="bar bar-header bar-positive">
-        <div class="buttons">
-          <button ng-click="toggleDelete()" class="button button-clear">{{ editBtnText }}</button>
-        </div>
-        <h1 class="title">List Tests</h1>
-        <div class="buttons">
-          <button ng-click="toggleReorder()" class="button button-clear">{{ reorderBtnText }}</button>
-        </div>
-      </header>
+  	<content has-header="true" padding="false">
+	<div>
+	Text1
+	<google-plus-signin clientid="44535440585-rshs1j4t1jc4qnp295fqmkr7jt12tbrh"></google-plus-signin>
+	Text2
+	</div>
+	
+  </content>
 
-      <content has-header="true">
-
-        <list onhold="onListHold" 
-        		show-delete="isDeletingItems"
-              show-reorder="isReorderingItems"
-              on-refresh-holding="refreshHolding()"
-              on-refresh-opening="refreshOpening(ratio)"
-              on-refresh="refreshItems()"
-              refresh-complete="refreshComplete"
-              on-delete="deleteListItem(item)"
-              delete-icon="ion-minus-circled"
-              reorder-icon="ion-navicon"
-              animation="my-repeat-animation"
-              can-delete="true"
-              can-reorder="true"
-              can-swipe="true"
-              option-buttons="optionButtons1"
-              item-type="item-icon-left">
-
-          <!-- shows that the item directive does not need attributes and can get values from the list attributes -->
-          <item ng-repeat="item in items" 
-                item="item">
-            <i class="icon ion-chatbox"></i>
-            Repeat Item: {{ item.text }}
-          </item>
-
-          <!-- shows how a divider could be included-->
-          <div class="item item-divider">
-            Me Divider, just plain ol' HTML nested in the list directive.
-          </div>
-
-          <!-- shows it can override the attributes set by the list -->
-          <item can-delete="false"
-                can-reorder="false"
-                can-swipe="false"
-                item-type="item-icon-left item-icon-right">
-            <i class="icon ion-stats-bars"></i>
-            Individual item directive, but can't do much. Overrides list attributes with its own left and right icons.
-            <i class="icon ion-arrow-graph-up-right"></i>
-          </item>
-
-          <!-- shows that the item directive can receive many attributes and overrides the list attributes -->
-          <item on-delete="deleteItem(item)"
-                delete-icon="ion-trash-a"
-                reorder-icon="ion-navicon-round"
-                can-delete="true"
-                can-reorder="true"
-                option-buttons="optionButtons2">
-            <i class="icon ion-person-stalker"></i>
-            Individual item directive and overrides list attrs with item attributes
-          </item>
-
-          <!-- shows how a divider could be included-->
-          <div class="item item-divider">
-            Below is NOT using the item directive, but just nested HTML
-          </div>
-
-          <!-- shows how very simple lists don't need the item directive at all -->
-          <div class="item item-thumbnail-left">
-            <img src="http://pbs.twimg.com/profile_images/2913427048/ed94193baa04ace85aa8a8bf4bf6c5a9.jpeg">
-            <h2>Nic Cage</h2>
-            <p>I am not a demon. I am a lizard, a shark, a heat-seeking panther. I want to be Bob Denver on acid playing the accordion.</p>
-          </div>
-
-          <a class="item item-icon-left" href="{{ item.url }}" ng-repeat="item in urlItems">
-            <i class="icon {{ item.icon }}"></i>
-            {{ item.text }}
-          </a>
-          <div class="item">
-            <slide-box show-pager="false">
-              <slide>
-                <div class="box blue">
-                  <h1>BLUE {{slideBox.slideIndex}}</h1>
-                </div>
-              </slide>
-              <slide>
-                <div class="box yellow">
-                  <h1>YELLOW {{slideBox.slideIndex}}</h1>
-                </div>
-              </slide>
-              <slide>
-                <div class="box pink"><h1>PINK {{slideBox.slideIndex}}</h1></div>
-              </slide>
-            </slide-box>
-          </div>
-
-        </list>
-
-      </content>
 </nav-page>
