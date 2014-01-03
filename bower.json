@@ -2,7 +2,8 @@
   "name": "todo",
   "version": "0.0.1",
   "dependencies": {
-    "angular-directive.g-signin": "https://github.com/sirkitree/angular-directive.g-signin.git"
+    "angular-directive.g-signin": "https://github.com/sirkitree/angular-directive.g-signin.git",
+    "ngGAPI": "git@github.com:christiansmith/ngGAPI.git"
   },
   "devDependencies": {}
 }
