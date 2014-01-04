@@ -8,6 +8,7 @@ angular.module('todo', [
   'checklist-model',
   'directive.g+signin',
   'final',
+  'gapi',
   'ionic'
 ])
 
@@ -15,6 +16,17 @@ angular.module('todo', [
   // Needed for routing to work
   $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|file|tel):/);
 })
+.value('GoogleApp', {
+    apiKey: 'AIzaSyA78RO9-B7qEr-WXJULOq3u-n4C7RS9wz4',
+    clientId: '44535440585-rshs1j4t1jc4qnp295fqmkr7jt12tbrh.apps.googleusercontent.com',
+    scopes: [
+      // whatever scopes you need for your app, for example:
+      //'https://www.googleapis.com/auth/drive',
+      //'https://www.googleapis.com/auth/youtube',
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/blogger'
+    ]  
+  })
 
 .config(function($routeProvider, $locationProvider) {
 

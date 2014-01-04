@@ -1,11 +1,13 @@
 <nav-page title="Test2">
   	<content has-header="true" padding="false">
-	<div>
-	Text1
+  	<!--
 	<google-plus-signin clientid="44535440585-rshs1j4t1jc4qnp295fqmkr7jt12tbrh"></google-plus-signin>
-	Text2
+	-->
+	<div>
+		<button ng-click="authorize()">Authorize</button>
+		<button ng-click="getBlogByUrl()">Blogger.getBlogByUrl</button>
+		<span>{{answer}}</span>
 	</div>
-	
   </content>
 
 </nav-page>
