@@ -9,6 +9,7 @@ angular.module('todo', [
   'directive.g+signin',
   'final',
   'gapi',
+  'pouchdb',
   'ionic'
 ])
 
@@ -69,4 +70,13 @@ angular.module('todo', [
     redirectTo: '/home'
   });
 
+}).
+factory('blogdb', function(pouchdb) {
+  return pouchdb.create('blogdb');
 });
+
+if (typeof String.prototype.startsWith != 'function') {
+  String.prototype.startsWith = function (str){
+    return this.slice(0, str.length) == str;
+  };
+}

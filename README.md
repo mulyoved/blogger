@@ -1,0 +1,1 @@
+Had to patch angular-pouchdb https://github.com/explorigin/angular-pouchdb/commit/d08df0fda88edfa4f9993215ae11306731e5df4c

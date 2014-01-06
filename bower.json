@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "dependencies": {
     "angular-directive.g-signin": "https://github.com/sirkitree/angular-directive.g-signin.git",
-    "ngGAPI": "git@github.com:christiansmith/ngGAPI.git"
+    "ngGAPI": "git@github.com:christiansmith/ngGAPI.git",
+    "pouchdb": "~1.1.0",
+    "angular-pouchdb": "~0.1.2"
   },
   "devDependencies": {}
 }

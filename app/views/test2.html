@@ -5,8 +5,22 @@
 	-->
 	<div>
 		<button ng-click="authorize()">Authorize</button>
+		<br/>
 		<button ng-click="getBlogByUrl()">Blogger.getBlogByUrl</button>
+		<button ng-click="getPosts()">Blogger.getPosts</button>
+		<br/>
+		<button ng-click="createPost()">Blogger: Create Post</button>
+		<button ng-click="changePost()">Blogger: Change Post</button>
+		<br/>
+		<button ng-click="sync()">Blogger.sync</button>
+		<button ng-click="readdb()">Read DB</button>
+		<br/>
+		<button ng-click="deleteAllPosts()">Delete Posts</button>
+		<button ng-click="deletedb()">Delete Local DB</button>
+		<br/>
 		<span>{{answer}}</span>
+		<span>{{posts}}</span>
+		<span>{{syncResult}}</span>
 	</div>
   </content>
 
