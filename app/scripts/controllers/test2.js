@@ -11,6 +11,11 @@ angular.module('todo')
 	});	
 
 	$scope.blogId = '4462544572529633201';
+	$scope.posts = [];
+
+	var loadPosts = function() {
+
+	}
 
 	$scope.authorize = function () {
 		GAPI.init(); 
@@ -78,7 +83,7 @@ angular.module('todo')
 		}).
 		then(function() {
 			// Get all modified posts
-			
+
 			var params = {
 				'fetchBodies': true, 
 				'fetchImages': false, 
@@ -193,16 +198,36 @@ angular.module('todo')
 		});
 	}
 
+	$scope.readAllPosts = function() {
+		var map = function(doc) {
+			if (doc.kind == 'blogger#post') {
+                emit(doc._id, doc);
+            }
+        }
+
+
+		var alldocs = blogdb.query({map: map});
+
+		alldocs.then(function(answer) {
+			$log.log('All docs', answer);
+			$scope.syncResult = 'done:' + answer.total_rows;
+			$scope.posts = answer.rows;
+			console.table(answer.rows);
+		}, function(reason) {
+			$log.error('readdb failed', reason);
+		});
+	}
+
 	$scope.readdb = function() {
 		var alldocs = blogdb.allDocs({include_docs: true, attachments: true});
 
 		alldocs.then(function(answer) {
 			$log.log('All docs', answer);
-			$scope.syncResult = 'done';
+			$scope.syncResult = 'done:' + answer.total_rows;
+			$scope.posts = answer.rows;
 		}, function(reason) {
 			$log.error('readdb failed', reason);
 		});
-		$scope.syncResult = 'ok1';
 	}
 
 	$scope.deletedb = function() {

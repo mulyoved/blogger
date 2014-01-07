@@ -14,14 +14,22 @@
 		<br/>
 		<button ng-click="sync()">Blogger.sync</button>
 		<button ng-click="readdb()">Read DB</button>
+		<button ng-click="readAllPosts()">Query All Posts DB</button>
 		<br/>
 		<button ng-click="deleteAllPosts()">Delete Posts</button>
 		<button ng-click="deletedb()">Delete Local DB</button>
 		<br/>
 		<span>{{answer}}</span>
-		<span>{{posts}}</span>
-		<span>{{syncResult}}</span>
+		<span>syncResult: {{syncResult}}</span>
 	</div>
+	<div>List:
+      <list onhold="onListHold" can-delete="true" on-delete="deleteItem(item)" delete-icon="ion-trash-a" show-delete="isDeletingItems">
+        <item ng-repeat="post in posts" ng-click="itemClick(post.value)"  item="post.value">
+          {{post.value.title}}
+        </item>
+      </list>
+    </div>
+
   </content>
 
 </nav-page>
