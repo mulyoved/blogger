@@ -12,6 +12,7 @@ angular.module('todo')
 
 	$scope.blogId = '4462544572529633201';
 	$scope.posts = [];
+	$scope.comments = [];
 
 	var loadPosts = function() {
 
@@ -34,7 +35,7 @@ angular.module('todo')
 		$log.log("getOPosts");
 
 
-		$scope.posts = Blogger.listPostsByBlog('4462544572529633201',
+		$scope.posts = Blogger.listPosts('4462544572529633201',
 			{'fetchBodies': true, 'fetchImages': false, 'maxResults': 10,'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'});
 
 
@@ -44,21 +45,32 @@ angular.module('todo')
 		//https://www.googleapis.com/blogger/v3/blogs/6225549217598152239/posts?fetchBodies=true&fetchImages=true&maxResults=10&fields=items(content%2Cid%2Ckind%2Cpublished%2Cstatus%2Ctitle%2CtitleLink%2Cupdated)%2CnextPageToken&key
 	};
 
-	var mapPost = function(post) {
-		for (var key in post) {
-		  if (post.hasOwnProperty(key) && key === 'id') {		
-	      	post['_id'] = post['id'];
-	        delete post['id'];
-	    	}
-	    }
+	var mapPost = function(doc) {
+		var timePublished = new Date(doc['published']).getTime();		
+		if (doc.kind.endsWith('#post')) {
+      		doc['_id'] = 'P' + (2000000000000 - timePublished) + '#' + doc.id;  // for sorting
+      	}
+      	else {
+      		//doc['_id'] = 'C' + doc.post.id + '#' + (2000000000000 - timePublished) + '#' + doc.id;  // for sorting
+      		doc['_id'] = 'C' + doc.post.id + '#' + (timePublished) + '#' + doc.id;  // for sorting
+      	}
+        //doc['time_published'] = timePublished;
 	};	
 
 	var mapDb2Post = function(post) {
-      	post['id'] = post['_id'];
         delete post['_id'];
         delete post['_rev'];
+        //delete post['time_published'];
+        //delete post['key'];
 
         return post;
+	}
+
+	var bumpDate = function(gapiDate) {
+		var date = new Date(gapiDate);
+		date = new Date(date.getTime() + 1);
+
+		return date2GAPIDate(date);
 	}
 
 	$scope.syncResult = "";
@@ -92,10 +104,10 @@ angular.module('todo')
 				'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'};
 
 			if (_lastUpdate.date.length > 0) {
-				params.startDate = _lastUpdate.date;
+				params.startDate = bumpDate(_lastUpdate.date);
 			}
 
-			return Blogger.listPostsByBlog($scope.blogId, params);
+			return Blogger.listPosts($scope.blogId, params);
 		}).
 		then(function(list) {
 			// Get all modified comments
@@ -107,10 +119,10 @@ angular.module('todo')
 				'fetchBodies': true, 
 				'maxResults': 10,
 				//'startDate': _lastUpdate.date,
-				'fields': 'items(author/displayName,content,id,kind,post,updated),nextPageToken'};
+				'fields': 'items(author/displayName,content,id,kind,post,published,updated),nextPageToken'};
 
 			if (_lastUpdate.date.length > 0) {
-				params.startDate = _lastUpdate.date;
+				params.startDate = bumpDate(_lastUpdate.date);
 			}
 
 			return Blogger.listCommentsByBlog($scope.blogId, params);
@@ -199,20 +211,28 @@ angular.module('todo')
 	}
 
 	$scope.readAllPosts = function() {
+		/*
 		var map = function(doc) {
-			if (doc.kind == 'blogger#post') {
+			if ('kind' in doc && doc.kind.endsWith('#post')) {
                 emit(doc._id, doc);
             }
         }
 
 
 		var alldocs = blogdb.query({map: map});
+		*/
+		var alldocs = blogdb.allDocs({
+			include_docs: true, 
+			attachments: false,
+			startkey: 'P0',
+			endkey: 'PZ'
+			});
 
 		alldocs.then(function(answer) {
 			$log.log('All docs', answer);
 			$scope.syncResult = 'done:' + answer.total_rows;
 			$scope.posts = answer.rows;
-			console.table(answer.rows);
+			//console.table(answer.rows);
 		}, function(reason) {
 			$log.error('readdb failed', reason);
 		});
@@ -278,7 +298,7 @@ angular.module('todo')
 	}
 
 	$scope.deleteAllPosts = function() {
-		Blogger.listPostsByBlog($scope.blogId, {
+		Blogger.listPosts($scope.blogId, {
 				'fetchBodies': true, 
 				'fetchImages': false, 
 				'maxResults': 10,
@@ -300,6 +320,61 @@ angular.module('todo')
 		}, function(reason) {
 			$log.error('Deleted all posts', reason);
 		})
+	}
+
+	$scope.postClick = function(post) {
+		$log.log('Post clicked',post);
+		var postId = post.id;
+
+		/*
+		var map = function(doc) {
+			if (doc.kind == 'blogger#comment') {
+
+                emit(doc._id, doc);
+            }
+        }
+
+		var alldocs = blogdb.query({map: map});
+		*/
+
+		var alldocs = blogdb.allDocs({
+			include_docs: true, 
+			attachments: false,
+			startkey: 'C'+postId+'#0',
+			endkey: 'C'+postId+'#Z'
+			});
+
+		alldocs.then(function(answer) {
+			$log.log('Comments', answer);
+			/*
+			var comments = [];
+			angular.forEach(answer.rows, function(comment) {
+        		if (comment.value.post.id == postId) {
+        			comments.push(comment.value);
+        		}
+			});
+			*/
+			$scope.syncResult = 'done:' + answer.rows.length;
+			$scope.comments = answer.rows;
+			console.table(answer.rows);
+		}, function(reason) {
+			$log.error('readdb failed', reason);
+		});
+	}
+
+	$scope.createPostDB = function() {
+		var time = new Date();
+
+		var post = {
+			id: '' + time.getTime(),
+			kind: 'db#post',
+			title: 'Sample Title' + time.toString(),
+			content: 'Sample Content' + time.toString(),
+			published: date2GAPIDate(time),
+		}
+
+		mapPost(post);
+		blogdb.post(post);
 	}
 
 });
