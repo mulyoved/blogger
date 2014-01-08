@@ -12,17 +12,16 @@ angular.module('todo')
 
 	$scope.blogId = '4462544572529633201';
 	$scope.posts = [];
+	$scope.post = {};
 	$scope.comments = [];
-
-	var loadPosts = function() {
-
-	}
+	$scope.comment = {};
+	$scope.answer = "";
+	$scope.syncResult = "";
 
 	$scope.authorize = function () {
 		GAPI.init(); 
 	}
 
-	$scope.answer = "";
 	$scope.getBlogByUrl = function() {
 		$log.log("getBlogByUrl");
 
@@ -30,7 +29,6 @@ angular.module('todo')
 		$scope.answer = Blogger.getBlogByUrl({'url': 'http://mulytestblog.blogspot.co.il/'});
 	}
 
-	$scope.posts = "";
 	$scope.getPosts = function() {
 		$log.log("getOPosts");
 
@@ -47,7 +45,10 @@ angular.module('todo')
 
 	var mapPost = function(doc) {
 		var timePublished = new Date(doc['published']).getTime();		
-		if (doc.kind.endsWith('#post')) {
+		if (doc.kind.startsWith('delete#')) {
+			doc['_id'] = 'D' + doc.id;
+		}
+		else if (doc.kind.endsWith('#post')) {
       		doc['_id'] = 'P' + (2000000000000 - timePublished) + '#' + doc.id;  // for sorting
       	}
       	else {
@@ -73,7 +74,6 @@ angular.module('todo')
 		return date2GAPIDate(date);
 	}
 
-	$scope.syncResult = "";
 	$scope.sync = function() {
 		$scope.syncResult = 'Start Sync';
 
@@ -244,7 +244,8 @@ angular.module('todo')
 		alldocs.then(function(answer) {
 			$log.log('All docs', answer);
 			$scope.syncResult = 'done:' + answer.total_rows;
-			$scope.posts = answer.rows;
+			//$scope.posts = answer.rows;
+			console.table(answer.rows);
 		}, function(reason) {
 			$log.error('readdb failed', reason);
 		});
@@ -322,28 +323,21 @@ angular.module('todo')
 		})
 	}
 
-	$scope.postClick = function(post) {
-		$log.log('Post clicked',post);
-		var postId = post.id;
-
-		/*
-		var map = function(doc) {
-			if (doc.kind == 'blogger#comment') {
-
-                emit(doc._id, doc);
-            }
-        }
-
-		var alldocs = blogdb.query({map: map});
-		*/
-
-		var alldocs = blogdb.allDocs({
-			include_docs: true, 
+	var getAllComments = function(postId, include_docs) {
+		return blogdb.allDocs({
+			'include_docs': include_docs, 
 			attachments: false,
 			startkey: 'C'+postId+'#0',
 			endkey: 'C'+postId+'#Z'
 			});
+	}
 
+	$scope.postClick = function(post) {
+		$log.log('Post clicked',post);
+		$scope.post = post;
+		var postId = post.id;
+
+		var alldocs = getAllComments(postId, true);
 		alldocs.then(function(answer) {
 			$log.log('Comments', answer);
 			/*
@@ -362,19 +356,158 @@ angular.module('todo')
 		});
 	}
 
+	$scope.commentClick = function(comment) {
+		$scope.comment = comment;
+		$scope.answer = JSON.stringify(comment, undefined, 2);
+	}
+
 	$scope.createPostDB = function() {
 		var time = new Date();
 
 		var post = {
-			id: '' + time.getTime(),
+			id: 'G' + time.getTime(), // Generated ID
 			kind: 'db#post',
 			title: 'Sample Title' + time.toString(),
 			content: 'Sample Content' + time.toString(),
 			published: date2GAPIDate(time),
+			key: 'U'
 		}
 
 		mapPost(post);
 		blogdb.post(post);
 	}
+
+	var execute = function(promise, taskName) {
+		promise.then(function(answer) {
+			$log.log('Completed %s: %O', taskName, answer);
+		}, function (reason) {
+			$log.error('Failed to execute %s: %O', taskName, reason);
+		})
+	}
+
+	$scope.changePostDB = function() {
+		var time = new Date();
+
+		var post = $scope.post;
+		post.kind =  'db#post';
+		post.title = 'Sample Title' + time.toString();
+		post.content = 'Sample Content' + time.toString();
+		post.key =  'U';
+
+		mapPost(post);
+		blogdb.post(post).then(function(answer) {
+			$log.log('Completed changePostDB: %O', answer);
+			post._id = answer.id;
+			post._rev = answer.rev;
+		}, function (reason) {
+			$log.error('Failed to execute changePostDB: %O', reason);
+		});
+	}
+
+	$scope.createCommentDB = function() {
+		if ($scope.post.kind.startsWith('blogger#')) {
+			var time = new Date();
+
+			var post = {
+				id: 'G' + time.getTime(), // Generated ID
+				kind: 'db#comment',
+				content: 'Comment' + time.toString(),
+				published: date2GAPIDate(time),
+				post: {
+					id: $scope.post.id
+				}
+			}
+
+			mapPost(post);
+			blogdb.post(post).then(function(answer) {
+				$log.log('Completed createCommentDB: %O', answer);
+				post._id = answer.id;
+				post._rev = answer.rev;
+			}, function (reason) {
+				$log.error('Failed to execute createCommentDB: %O', reason);
+			});
+		}
+		else {
+			$log.error('Cannot add comment to unpublished post');
+		}
+	}
+
+	$scope.deletePostDB = function() {
+		var post = $scope.post;
+
+		//todo
+		//Save for syncronization
+		var _post = JSON.parse(JSON.stringify(post));
+
+		post.kind = 'delete#post';
+		mapDb2Post(post);
+		mapPost(post);
+
+		$log.log('Start deletePostDB', post);
+	
+		blogdb.remove(_post).
+		then(function(answer) {
+			$log.log('Post deleted', answer);
+			return getAllComments(_post.id, true);
+		}).
+		then(function(answer) {
+			$log.log('All comments', answer);
+			var delAllComments = [];
+			angular.forEach(answer.rows, function(comment) {
+				delAllComments.push(blogdb.remove(comment.doc));
+			});
+
+			return $q.all(delAllComments);
+		}).
+		then(function(answer) {
+			$log.log('All comments deleted', answer);
+			if (post.kind.startsWith('blogger#')) {
+				return blogdb.post(post);
+			}
+			else {
+				$log.log('Post was not published, no need to save as deleted');
+				return 0;
+			}
+		}).
+		then(function(answer) {
+			$log.log('Post saved as deleted', answer);
+		}, function(reason) {
+			$log.error(reason);
+		});
+
+		//Remove from database		
+	}
+
+	$scope.deleteCommentDB = function() {
+		var post = $scope.comment;
+
+		//todo
+		//Save for syncronization
+		var _post = JSON.parse(JSON.stringify(post));
+
+		post.kind = 'delete#comment';
+		mapDb2Post(post);
+		mapPost(post);
+
+		$log.log('Start deleteCommentDB', post);
+	
+		blogdb.remove(_post).
+		then(function(answer) {
+			$log.log('Comment deleted', answer);
+			if (post.kind.startsWith('blogger#')) {
+				return blogdb.post(post);
+			}
+			else {
+				$log.log('Comment was not published, no need to save as deleted');
+				return 0;
+			}
+		}).
+		then(function(answer) {
+			$log.log('Comment saved as deleted', answer);
+		}, function(reason) {
+			$log.error(reason);
+		});
+	}
+
 
 });

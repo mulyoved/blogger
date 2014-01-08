@@ -12,6 +12,8 @@
 		<button ng-click="createPost()">Blogger: Create Post</button>
 		<button ng-click="changePost()">Blogger: Change Post</button>
 		<button ng-click="createPostDB()">DB: Create Post</button>
+		<button ng-click="changePostDB()">DB: Change Post</button>
+		<button ng-click="createCommentDB()">DB: Create Comment</button>
 		<br/>
 		<button ng-click="sync()">Blogger.sync</button>
 		<button ng-click="readdb()">Read DB</button>
@@ -19,21 +21,24 @@
 		<br/>
 		<button ng-click="deleteAllPosts()">Delete Posts</button>
 		<button ng-click="deletedb()">Delete Local DB</button>
+		<button ng-click="deletePostDB()">DB: Delete Post</button>
+		<button ng-click="deleteCommentDB()">DB: Delete Comment</button>
 		<br/>
 		<span>{{answer}}</span>
 		<span>syncResult: {{syncResult}}</span>
 	</div>
 	<div class="row">List:
 
-      <list class="col" onhold="onListHold" can-delete="true" on-delete="deleteItem(item)" delete-icon="ion-trash-a" show-delete="isDeletingItems">
-        <item ng-repeat="post in posts" ng-click="postClick(post.doc)"  item="post.doc">
+      <list class="fade-in-not-out col" onhold="onListHold" can-delete="true" on-delete="deleteItem(item)" delete-icon="ion-trash-a" show-delete="isDeletingItems">
+        <item ng-repeat="post in posts track by post.doc.id" ng-click="postClick(post.doc)" item="post.doc">
           {{post.doc.title}}, {{post.doc._id}}
         </item>
       </list>
 
-		<list class="col" onhold="onListHold" can-delete="true" on-delete="deleteItem(item)" delete-icon="ion-trash-a" show-delete="isDeletingItems">
+      <!-- fade-in-not-out -->
+		<list class="fade-in-not-out col" onhold="onListHold" can-delete="true" on-delete="deleteItem(item)" delete-icon="ion-trash-a" show-delete="isDeletingItems">
 			<!-- class="holdSelect"  -->
-			<item ng-repeat="comment in comments" item="comment.doc">
+			<item ng-repeat="comment in comments track by comment.doc.id" ng-click="commentClick(comment.doc)" item="comment.doc">
 				{{comment.doc.content}}
 			</item>
 		</list>
@@ -42,17 +47,11 @@
 
     <div>
     Todo: 
-    add post to db, sync it
-    change post in db, sync it
-    delete post from db, sync it
-    delete unpublished post 
-
-    comments, add, sync, delete
-    when sync just created post, need to change the key for the related unpublished comments
-
-    don't sync comment where post id is not yet known
-
-    don't show deleted items    
+    - query key = 'D' - delete - update key 
+    - query key = 'U' - update - update id/key
+    - query blogger
+    - query db for keys
+    - sync
     </div>
 
   </content>
