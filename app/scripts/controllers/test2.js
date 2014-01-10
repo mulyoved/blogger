@@ -4,33 +4,33 @@ angular.module('todo')
 .controller('Test2Ctrl', function($scope, $log, $q, GAPI, Blogger, blogdb, pouchdb) {
 
 	$scope.$on('event:google-plus-signin-success', function (event,authResult) {
-		console.log("Send login to server or save into cookie");
+		console.log('Send login to server or save into cookie');
 	});
 	$scope.$on('event:google-plus-signin-failure', function (event,authResult) {
-		console.log("Auth failure or signout detected");
-	});	
+		console.log('Auth failure or signout detected');
+	});
 
 	$scope.blogId = '4462544572529633201';
 	$scope.posts = [];
 	$scope.post = {};
 	$scope.comments = [];
 	$scope.comment = {};
-	$scope.answer = "";
-	$scope.syncResult = "";
+	$scope.answer = '';
+	$scope.syncResult = '';
 
 	$scope.authorize = function () {
-		GAPI.init(); 
-	}
+		GAPI.init();
+	};
 
 	$scope.getBlogByUrl = function() {
-		$log.log("getBlogByUrl");
+		$log.log('getBlogByUrl');
 
 
 		$scope.answer = Blogger.getBlogByUrl({'url': 'http://mulytestblog.blogspot.co.il/'});
-	}
+	};
 
 	$scope.getPosts = function() {
-		$log.log("getOPosts");
+		$log.log('getOPosts');
 
 
 		$scope.posts = Blogger.listPosts('4462544572529633201',
@@ -44,35 +44,36 @@ angular.module('todo')
 	};
 
 	var mapPost = function(doc) {
-		var timePublished = new Date(doc['published']).getTime();		
+		var timePublished = new Date(doc.published).getTime();
 		if (doc.kind.startsWith('delete#')) {
-			doc['_id'] = 'D' + doc.id;
+			doc._id = 'D' + doc.id;
 		}
 		else if (doc.kind.endsWith('#post')) {
-      		doc['_id'] = 'P' + (2000000000000 - timePublished) + '#' + doc.id;  // for sorting
-      	}
-      	else {
-      		//doc['_id'] = 'C' + doc.post.id + '#' + (2000000000000 - timePublished) + '#' + doc.id;  // for sorting
-      		doc['_id'] = 'C' + doc.post.id + '#' + (timePublished) + '#' + doc.id;  // for sorting
-      	}
+			doc._id = 'P' + (2000000000000 - timePublished) + '#' + doc.id;  // for sorting
+		}
+		else {
+			//doc['_id'] = 'C' + doc.post.id + '#' + (2000000000000 - timePublished) + '#' + doc.id;  // for sorting
+			doc._id = 'C' + doc.post.id + '#' + (timePublished) + '#' + doc.id;  // for sorting
+		}
         //doc['time_published'] = timePublished;
-	};	
+	};
 
 	var mapDb2Post = function(post) {
-        delete post['_id'];
-        delete post['_rev'];
-        //delete post['time_published'];
-        //delete post['key'];
+		delete post._id;
+		delete post._rev;
+		delete post.key;
+		//delete post['time_published'];
+		//delete post['key'];
 
-        return post;
-	}
+		return post;
+	};
 
 	var bumpDate = function(gapiDate) {
 		var date = new Date(gapiDate);
 		date = new Date(date.getTime() + 1);
 
 		return date2GAPIDate(date);
-	}
+	};
 
 	$scope.sync = function() {
 		$scope.syncResult = 'Start Sync';
@@ -97,11 +98,12 @@ angular.module('todo')
 			// Get all modified posts
 
 			var params = {
-				'fetchBodies': true, 
-				'fetchImages': false, 
+				'fetchBodies': true,
+				'fetchImages': false,
 				'maxResults': 10,
 				//'startDate': _lastUpdate.date,
-				'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'};
+				'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'
+			};
 
 			if (_lastUpdate.date.length > 0) {
 				params.startDate = bumpDate(_lastUpdate.date);
@@ -116,10 +118,11 @@ angular.module('todo')
 			}
 
 			var params = {
-				'fetchBodies': true, 
+				'fetchBodies': true,
 				'maxResults': 10,
 				//'startDate': _lastUpdate.date,
-				'fields': 'items(author/displayName,content,id,kind,post,published,updated),nextPageToken'};
+				'fields': 'items(author/displayName,content,id,kind,post,published,updated),nextPageToken'
+			};
 
 			if (_lastUpdate.date.length > 0) {
 				params.startDate = bumpDate(_lastUpdate.date);
@@ -149,7 +152,7 @@ angular.module('todo')
 			if (list.length > 0) {
 				//$log.log('list', list)
 				$log.log('Blogger -> got answer', list);
-				$log.log('DB -> alldocs', alldocs)
+				$log.log('DB -> alldocs', alldocs);
 
 				//create dictionary of saved item <id, item>
 				var savedItems = {};
@@ -181,6 +184,7 @@ angular.module('todo')
 
 					if (needUpdate) {
 						mapPost(item);
+						item.key = item.id;
 						toUpdate.push(item);
 					}
 				});
@@ -208,7 +212,7 @@ angular.module('todo')
 		}, function(reason) {
 			$log.error('Sync failed', reason);
 		});
-	}
+	};
 
 	$scope.readAllPosts = function() {
 		/*
@@ -222,11 +226,11 @@ angular.module('todo')
 		var alldocs = blogdb.query({map: map});
 		*/
 		var alldocs = blogdb.allDocs({
-			include_docs: true, 
+			include_docs: true,
 			attachments: false,
 			startkey: 'P0',
 			endkey: 'PZ'
-			});
+		});
 
 		alldocs.then(function(answer) {
 			$log.log('All docs', answer);
@@ -236,7 +240,7 @@ angular.module('todo')
 		}, function(reason) {
 			$log.error('readdb failed', reason);
 		});
-	}
+	};
 
 	$scope.readdb = function() {
 		var alldocs = blogdb.allDocs({include_docs: true, attachments: true});
@@ -249,22 +253,22 @@ angular.module('todo')
 		}, function(reason) {
 			$log.error('readdb failed', reason);
 		});
-	}
+	};
 
 	$scope.deletedb = function() {
-  		pouchdb.destroy('blogdb');
-  		pouchdb.create('blogdb');
-	}
+		pouchdb.destroy('blogdb');
+		pouchdb.create('blogdb');
+	};
 
 	$scope.createPost = function() {
 		Blogger.insertPosts($scope.blogId, {
-			title: 'Test Post2', 
+			title: 'Test Post2',
 			content: 'Test Content'
 		}).
 		then(function(answer) {
 			$log.log('Answer:', answer);
 		});
-	}
+	};
 
 	$scope.changePost = function() {
 		blogdb.allDocs({include_docs: true, attachments: false}).then(function(list) {
@@ -282,28 +286,29 @@ angular.module('todo')
 			$log.log('Change post', answer);
 		}, function(reason) {
 			$log.error('Failed', reason);
-		})
-	}
+		});
+	};
 
 	var idToDelete = [];
 	var deleteNextPost = function() {
 		if (idToDelete.length > 0) {
 			var id = idToDelete.pop();
 			Blogger.deletePosts($scope.blogId, id).then(function(answer) {
-				$log.log('Posts %s deleted %O', id, answer)
+				$log.log('Posts %s deleted %O', id, answer);
 				deleteNextPost();
 			}, function(reason) {
-				$log.error('Posts %s deleted failed %O Aborted', id, reason)
+				$log.error('Posts %s deleted failed %O Aborted', id, reason);
 			});
 		}
-	}
+	};
 
 	$scope.deleteAllPosts = function() {
 		Blogger.listPosts($scope.blogId, {
-				'fetchBodies': true, 
-				'fetchImages': false, 
+				'fetchBodies': true,
+				'fetchImages': false,
 				'maxResults': 10,
-				'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'}).
+				'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'
+			}).
 		then(function(list) {
 			idToDelete = [];
 			if ('items' in list && list.items.length > 0) {
@@ -321,16 +326,16 @@ angular.module('todo')
 		}, function(reason) {
 			$log.error('Deleted all posts', reason);
 		})
-	}
+	};
 
 	var getAllComments = function(postId, include_docs) {
 		return blogdb.allDocs({
-			'include_docs': include_docs, 
+			'include_docs': include_docs,
 			attachments: false,
 			startkey: 'C'+postId+'#0',
 			endkey: 'C'+postId+'#Z'
-			});
-	}
+		});
+	};
 
 	$scope.postClick = function(post) {
 		$log.log('Post clicked',post);
@@ -413,6 +418,7 @@ angular.module('todo')
 				kind: 'db#comment',
 				content: 'Comment' + time.toString(),
 				published: date2GAPIDate(time),
+				key: 'U', 
 				post: {
 					id: $scope.post.id
 				}
@@ -442,6 +448,7 @@ angular.module('todo')
 		post.kind = 'delete#post';
 		mapDb2Post(post);
 		mapPost(post);
+		post.key = 'D';
 
 		$log.log('Start deletePostDB', post);
 	
@@ -488,6 +495,7 @@ angular.module('todo')
 		post.kind = 'delete#comment';
 		mapDb2Post(post);
 		mapPost(post);
+		post.key = 'D';
 
 		$log.log('Start deleteCommentDB', post);
 	

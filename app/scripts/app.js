@@ -64,6 +64,11 @@ angular.module('todo', [
     controller: 'Test2Ctrl'
   });
 
+  $routeProvider.when('/testq', {
+    templateUrl: 'views/test_q.html',
+    controller: 'TestQCtrl'
+  });
+
   // if none of the above routes are met, use this fallback
   // which executes the 'AppCtrl' controller (controllers.js)
   $routeProvider.otherwise({
