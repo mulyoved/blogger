@@ -3,7 +3,7 @@
 angular.module('todo')
 .controller('Test2Ctrl', function($scope, $log, $q, GAPI, Blogger, blogdb, pouchdb) {
 
-	$scope.$on('event:google-plus-signin-success', function (event,authResult) {
+	$scope.$on('event:google-plus-signin-success', function (event, authResult) {
 		console.log('Send login to server or save into cookie');
 	});
 	$scope.$on('event:google-plus-signin-failure', function (event,authResult) {
@@ -75,6 +75,156 @@ angular.module('todo')
 		return date2GAPIDate(date);
 	};
 
+	var blogger_getModifiedDocuments = function(lastUpdate) {
+		var _bloggerList = [];
+
+		var params = {
+			'fetchBodies': true,
+			'fetchImages': false,
+			'maxResults': 10,
+			//'startDate': _lastUpdate.date,
+			'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'
+		};
+
+		if (lastUpdate.length > 0) {
+			params.startDate = bumpDate(lastUpdate);
+		}
+
+		var promise = Blogger.listPosts($scope.blogId, params).
+		then(function(list) {
+			// Get all modified comments from Blogger
+			if ('items' in list && list.items.length > 0) {
+				_bloggerList = list.items;
+			}
+
+			var params = {
+				'fetchBodies': true,
+				'maxResults': 10,
+				//'startDate': _lastUpdate.date,
+				'fields': 'items(author/displayName,content,id,kind,post,published,updated),nextPageToken'
+			};
+
+			if (lastUpdate.length > 0) {
+				params.startDate = bumpDate(lastUpdate);
+			}
+
+			return Blogger.listCommentsByBlog($scope.blogId, params);
+		}).
+		then(function(list) {
+			// Get all documents from DB
+			if ('items' in list && list.items.length > 0) {
+				// Append list.items to _bloggerList
+				_bloggerList.push.apply(_bloggerList, list.items);
+			}
+
+			return _bloggerList;
+		});
+
+		return promise;
+	};
+
+	var proccessArray = function(arr, promise) {
+		var item = arr.pop();
+		var p = promise(item).
+		then(function(answer) {
+			//$log.log('Success: ',greeting);
+			if (arr.length > 0) {
+				return prommiseArray(arr, promise);
+			}
+			else {
+				return 0;				
+			}
+		});
+
+		return p;
+	}
+
+	var updateBlogger = function(_doc) {
+		var doc = _doc.value;
+		var orgDoc = JSON.parse(JSON.stringify(doc));
+		var promise;
+		$log.log('to Update', doc);
+
+		var kind = doc.kind;
+		var id = doc.id;
+		var isPost = kind.endsWith('#post');
+		mapDb2Post(doc);
+		$log.log('to Update Clean', doc);
+
+		if (id.startsWith('G')) {
+			delete doc.id; 
+			delete doc.kind; 
+
+			if (isPost) {
+				promise = Blogger.insertPosts($scope.blogId, doc);
+			}
+			else {
+				promise = Blogger.insertComments($scope.blogId, doc);
+			}
+			promise.
+			then(function(answer) {
+				$log.log('insertPosts Answer:', answer);
+				var item = answer;
+
+				return blogdb.remove(orgDoc).
+				then(function(answer) {
+					mapPost(item);
+					item.key = item.id;
+					return blogdb.post(item);
+				});
+			});
+		}
+		else {
+			promise = Blogger.updatePosts($scope.blogId, id, doc);
+			promise.
+			then(function(answer) {
+				$log.log('updatePosts Answer:', answer);
+				mapPost(item);
+				item.key = item.id;
+				return blogdb.post(item);
+			});
+		}
+	}
+
+
+	var db_getAllModifiedDocuments = function() {
+		var queryFun = {
+			map: function(doc) { emit(doc.key, doc); }
+		};
+
+		var alldocs = blogdb.query(queryFun, {reduce: false, key: 'U'});
+
+		/*
+		var alldocs = blogdb.allDocs({
+			include_docs: true,
+			attachments: false,
+			keys: 'U'
+		});
+		*/
+
+		alldocs.then(function(answer) {
+			$log.log('List of updated documents', answer);
+			if (answer.total_rows > 0) {
+				return proccessArray(answer.rows, updateBlogger);
+			}
+			else {
+				return 0;
+			}
+		});
+
+		return alldocs;
+	};
+
+	//Test
+	$scope.syncModifiedDocuments = function() {
+		db_getAllModifiedDocuments().
+		then(function(answer) {
+			$log.log('syncModifiedDocuments completed', answer);
+		}, function(reason) {
+			$log.error('syncModifiedDocuments Failed', reason)
+		})
+	}
+
 	$scope.sync = function() {
 		$scope.syncResult = 'Start Sync';
 
@@ -82,6 +232,8 @@ angular.module('todo')
 		var _lastUpdate;
 		var _lastUpdateChanged = false;
 		var _bloggerList = [];
+
+		//Update DB->Blogger
 		blogdb.get('lastUpdate').
 		then(function(lastUpdate) {
 			// Get last update from DB
@@ -95,49 +247,13 @@ angular.module('todo')
 			_lastUpdate = { _id: 'lastUpdate', date: '' };
 		}).
 		then(function() {
-			// Get all modified posts
-
-			var params = {
-				'fetchBodies': true,
-				'fetchImages': false,
-				'maxResults': 10,
-				//'startDate': _lastUpdate.date,
-				'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'
-			};
-
-			if (_lastUpdate.date.length > 0) {
-				params.startDate = bumpDate(_lastUpdate.date);
-			}
-
-			return Blogger.listPosts($scope.blogId, params);
+			// Get all modified posts from Blogger
+			return blogger_getModifiedDocuments(_lastUpdate.date);
 		}).
 		then(function(list) {
-			// Get all modified comments
-			if ('items' in list && list.items.length > 0) {
-				_bloggerList = list.items;
-			}
+			_bloggerList = list;
 
-			var params = {
-				'fetchBodies': true,
-				'maxResults': 10,
-				//'startDate': _lastUpdate.date,
-				'fields': 'items(author/displayName,content,id,kind,post,published,updated),nextPageToken'
-			};
-
-			if (_lastUpdate.date.length > 0) {
-				params.startDate = bumpDate(_lastUpdate.date);
-			}
-
-			return Blogger.listCommentsByBlog($scope.blogId, params);
-
-		}).
-		then(function(list) {
-			// Get all documents from DB
-			if ('items' in list && list.items.length > 0) {
-				// Append list.items to _bloggerList
-				_bloggerList.push.apply(_bloggerList, list.items);
-			}
-			//Get 
+			//Get all documents in database
 			if ('items' in list && list.items.length > 0) {
 				return blogdb.allDocs({include_docs: true, attachments: false});
 			}
@@ -304,11 +420,11 @@ angular.module('todo')
 
 	$scope.deleteAllPosts = function() {
 		Blogger.listPosts($scope.blogId, {
-				'fetchBodies': true,
-				'fetchImages': false,
-				'maxResults': 10,
-				'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'
-			}).
+			'fetchBodies': true,
+			'fetchImages': false,
+			'maxResults': 10,
+			'fields': 'items(content,id,kind,published,status,title,titleLink,updated),nextPageToken'
+		}).
 		then(function(list) {
 			idToDelete = [];
 			if ('items' in list && list.items.length > 0) {
@@ -325,7 +441,7 @@ angular.module('todo')
 			//$log.log('Deleted all posts');
 		}, function(reason) {
 			$log.error('Deleted all posts', reason);
-		})
+		});
 	};
 
 	var getAllComments = function(postId, include_docs) {
@@ -345,26 +461,18 @@ angular.module('todo')
 		var alldocs = getAllComments(postId, true);
 		alldocs.then(function(answer) {
 			$log.log('Comments', answer);
-			/*
-			var comments = [];
-			angular.forEach(answer.rows, function(comment) {
-        		if (comment.value.post.id == postId) {
-        			comments.push(comment.value);
-        		}
-			});
-			*/
 			$scope.syncResult = 'done:' + answer.rows.length;
 			$scope.comments = answer.rows;
 			console.table(answer.rows);
 		}, function(reason) {
 			$log.error('readdb failed', reason);
 		});
-	}
+	};
 
 	$scope.commentClick = function(comment) {
 		$scope.comment = comment;
 		$scope.answer = JSON.stringify(comment, undefined, 2);
-	}
+	};
 
 	$scope.createPostDB = function() {
 		var time = new Date();
@@ -376,19 +484,19 @@ angular.module('todo')
 			content: 'Sample Content' + time.toString(),
 			published: date2GAPIDate(time),
 			key: 'U'
-		}
+		};
 
 		mapPost(post);
 		blogdb.post(post);
-	}
+	};
 
 	var execute = function(promise, taskName) {
 		promise.then(function(answer) {
 			$log.log('Completed %s: %O', taskName, answer);
 		}, function (reason) {
 			$log.error('Failed to execute %s: %O', taskName, reason);
-		})
-	}
+		});
+	};
 
 	$scope.changePostDB = function() {
 		var time = new Date();
@@ -407,7 +515,7 @@ angular.module('todo')
 		}, function (reason) {
 			$log.error('Failed to execute changePostDB: %O', reason);
 		});
-	}
+	};
 
 	$scope.createCommentDB = function() {
 		if ($scope.post.kind.startsWith('blogger#')) {
@@ -418,11 +526,11 @@ angular.module('todo')
 				kind: 'db#comment',
 				content: 'Comment' + time.toString(),
 				published: date2GAPIDate(time),
-				key: 'U', 
+				key: 'U',
 				post: {
 					id: $scope.post.id
 				}
-			}
+			};
 
 			mapPost(post);
 			blogdb.post(post).then(function(answer) {
@@ -436,7 +544,7 @@ angular.module('todo')
 		else {
 			$log.error('Cannot add comment to unpublished post');
 		}
-	}
+	};
 
 	$scope.deletePostDB = function() {
 		var post = $scope.post;
@@ -483,7 +591,7 @@ angular.module('todo')
 		});
 
 		//Remove from database		
-	}
+	};
 
 	$scope.deleteCommentDB = function() {
 		var post = $scope.comment;
@@ -515,7 +623,7 @@ angular.module('todo')
 		}, function(reason) {
 			$log.error(reason);
 		});
-	}
+	};
 
 
 });
